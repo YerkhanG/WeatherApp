@@ -36,6 +36,7 @@ API_KEY:
 API_KEY = "ваш_ключ_от_StormGlass"
 ```
 1. Регистрация пользователя
+   
 URL: /register_user/
 Метод: POST
 Параметры (формат application/x-www-form-urlencoded):
@@ -47,11 +48,13 @@ city – город (строка, обязательный)
 curl -X POST -d "username=johndoe&password=secret123&city=Almaty" http://localhost:8000/register_user/ 
 ```
 2. Получение токена
+   
 Чтобы получить токен для пользователя, воспользуйтесь стандартным DRF эндпоинтом.
 ```bash
 curl -X POST -d "username=johndoe&password=secret123" http://localhost:8000/api-token-auth/
 ```
 3. Получение погоды пользователя
+   
 URL: /user_weather/
 Метод: GET
 Аутентификация: Токен-аутентификация (DRF)
@@ -62,6 +65,7 @@ URL: /user_weather/
 curl -H "Authorization: Token <ваш токен>" http://localhost:8000/user_weather/
 ```
 4. Добавление города (Менеджеры)
+   
 URL: /add-city/
 Метод: POST
 Аутентификация: Токен-аутентификация (DRF)
