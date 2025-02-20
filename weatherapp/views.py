@@ -9,6 +9,11 @@ from django.utils import timezone
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from geopy import Nominatim
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from Jobtech import settings
 from weatherapp.models import Weather, Profile
 
@@ -30,12 +35,12 @@ def register_user(request):
 
         if not all([username, password, city]):
             return JsonResponse({
-                'error': 'Необходимо указать username, password и city'
+                'error': 'Username, password и city are necessary to input'
             }, status=400)
 
         if User.objects.filter(username=username).exists():
             return JsonResponse({
-                'error': 'Пользователь с таким именем уже существует'
+                'error': 'User with this name already exists'
             }, status=400)
 
         # Create user and set their city
@@ -45,25 +50,26 @@ def register_user(request):
         profile.save()
 
         return JsonResponse({
-            'message': 'Пользователь успешно зарегистрирован',
+            'message': 'Successful registration',
             'username': username,
             'city': city
         })
 
-    return JsonResponse({'error': 'Метод не поддерживается'}, status=405)
+    return JsonResponse({'error': 'Unsupported method'}, status=405)
 
 def is_manager(user):
     return user.groups.filter(name='Managers').exists()
 
 
-@login_required
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def user_weather(request):
     profile = get_object_or_404(Profile, user=request.user)
     if not profile.city:
-        return JsonResponse({'error': 'Город не указан в профиле пользователя.'}, status=400)
-
+        return Response({'error': 'Город не указан в профиле пользователя.'}, status=400)
     weather_data = fetch_weather_data(profile.city)
-    return JsonResponse(weather_data)
+    return Response(weather_data)
 
 
 def fetch_weather_data(city):
@@ -127,16 +133,19 @@ def fetch_weather_data(city):
         return data
 
 
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def add_city(request):
+    if not request.user.groups.filter(name='Managers').exists():
+        return Response({'error': 'Access denied. Manager only.'}, status=403)
 
-@user_passes_test(is_manager)
-def add_city_view(request):
-    if request.method == 'POST':
-        city = request.POST.get('city')
-        if city:
-            if Weather.objects.filter(city=city).exists():
-                messages.error(request, 'Город уже существует.')
-            else:
-                Weather.objects.create(city=city)
-                messages.success(request, f'Город {city} успешно добавлен.')
-        return redirect('add_city_view')
-    return render(request, 'add_city.html')
+    city = request.data.get('city')
+    if not city:
+        return Response({'error': 'City parameter is required.'}, status=400)
+
+    if Weather.objects.filter(city=city).exists():
+        return Response({'error': 'City already exists.'}, status=400)
+
+    Weather.objects.create(city=city)
+    return Response({'message': f'City {city} successfully added.'})

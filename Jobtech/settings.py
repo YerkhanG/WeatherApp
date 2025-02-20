@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'weatherapp.apps.WeatherappConfig',
     'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -88,6 +89,11 @@ DATABASES = {
 }
 API_KEY = "ece4234c-ee16-11ef-be47-0242ac130003-ece423b0-ee16-11ef-be47-0242ac130003"
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
