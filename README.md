@@ -29,3 +29,46 @@ CREATE DATABASE weather_app;
 python manage.py migrate
 python manage.py runserver
 ```
+## Описание API
+API_KEY:
+В файле settings.py укажите ваш StormGlass API ключ:
+```python
+API_KEY = "ваш_ключ_от_StormGlass"
+```
+1. Регистрация пользователя
+URL: /register_user/
+Метод: POST
+Параметры (формат application/x-www-form-urlencoded):
+username – имя пользователя (строка, обязательный)
+password – пароль (строка, обязательный)
+city – город (строка, обязательный)
+Пример запроса (curl):
+```bash
+curl -X POST -d "username=johndoe&password=secret123&city=Almaty" http://localhost:8000/register_user/ 
+```
+2. Получение токена
+Чтобы получить токен для пользователя, воспользуйтесь стандартным DRF эндпоинтом.
+```bash
+curl -X POST -d "username=johndoe&password=secret123" http://localhost:8000/api-token-auth/
+```
+3. Получение погоды пользователя
+URL: /user_weather/
+Метод: GET
+Аутентификация: Токен-аутентификация (DRF)
+Описание:
+Возвращает данные о погоде для города, указанного в профиле авторизованного пользователя. Если данные в кэше актуальны (меньше 10 минут), они возвращаются из базы, иначе происходит запрос к StormGlass API.
+Пример запроса (curl):
+```bash
+curl -H "Authorization: Token <ваш токен>" http://localhost:8000/user_weather/
+```
+4. Добавление города (Менеджеры)
+URL: /add-city/
+Метод: POST
+Аутентификация: Токен-аутентификация (DRF)
+Требование: Пользователь должен состоять в группе "Managers"
+Параметры (JSON):
+city – название города (обязательно)
+Пример запроса (curl):
+```bash
+curl -X POST -H "Authorization: Token <ваш токен>"" -H "Content-Type: application/json" -d "{\"city\": \"NewYork\"}" http://localhost:8000/add-city/
+```
